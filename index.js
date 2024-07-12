@@ -24,7 +24,7 @@ app.post('/', (req, res) => {
 app.get('/', (req, res) => {
     const formattedData = dataStore.length > 0 ? dataStore.map(item => JSON.stringify(item)).join('\n') : 'No data available';
     res.send(`
-        <h1>Stored Data</h1>
+        <h1>Logged Data</h1>
         <pre>${formattedData}</pre>
        
     `);
