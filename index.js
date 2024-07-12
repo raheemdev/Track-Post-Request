@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
     res.send(`
         <h1>Stored Data</h1>
         <pre>${formattedData}</pre>
-        <a href="/">Back to form</a>
+       
     `);
 });
 
