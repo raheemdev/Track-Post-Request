@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // Handle form submissions
 app.post('/track', (req, res) => {
     const postData = req.body;
-    dataStore.push(postData); // Add the data to the in-memory store
+    dataStore = [postData]; // Clear the previous data and add the new data
     res.status(200).send("done");
 });
 
