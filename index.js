@@ -29,17 +29,71 @@ app.post('/', (req, res) => {
   res.status(200).send('done')
 })
 
-// Display stored data
+// Display stored data as a formatted HTML table
 app.get('/', (req, res) => {
   if (dataStore.length > 0) {
+    const tableRows = dataStore
+      .map(
+        (item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${new Date(item.timestamp).toLocaleString()}</td>
+                <td><pre>${JSON.stringify(item, null, 2)}</pre></td>
+            </tr>
+        `
+      )
+      .join('')
+
     res.send(`
-            <h1>Logged Data</h1>
-            <pre>${JSON.stringify(dataStore, null, 2)}</pre>
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    tr:hover {
+                        background-color: #f1f1f1;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Logged Data</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Request Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            </body>
+            </html>
         `)
   } else {
     res.send(`
             <h1>Logged Data</h1>
-            <pre>No data available</pre>
+            <p>No data available</p>
         `)
   }
 })
