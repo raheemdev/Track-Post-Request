@@ -29,99 +29,130 @@ app.post('/', (req, res) => {
   res.status(200).send('done')
 })
 
+// Clear all stored data
+app.delete('/', (req, res) => {
+  dataStore = []
+  res.status(200).send('All requests cleared')
+})
+
 // Display stored data as a formatted and responsive HTML table
 app.get('/', (req, res) => {
-  if (dataStore.length > 0) {
-    const tableRows = dataStore
-      .map(
-        (item, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${new Date(item.timestamp).toLocaleString()}</td>
-                <td><pre>${JSON.stringify(item, null, 2)}</pre></td>
-            </tr>
-        `
-      )
-      .join('')
+  const tableRows = dataStore
+    .map(
+      (item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${new Date(item.timestamp).toLocaleString()}</td>
+            <td><pre>${JSON.stringify(item, null, 2)}</pre></td>
+        </tr>
+    `
+    )
+    .join('')
 
-    res.send(`
-            <html>
-            <head>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 20px;
+  res.send(`
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                    word-wrap: break-word;
+                }
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                tr:hover {
+                    background-color: #f1f1f1;
+                }
+                pre {
+                    margin: 0;
+                    font-family: monospace;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                }
+                @media screen and (max-width: 768px) {
+                    table, thead, tbody, th, td, tr {
+                        display: block;
                     }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 20px;
-                        word-wrap: break-word;
+                    thead tr {
+                        display: none;
                     }
-                    th, td {
-                        border: 1px solid #ddd;
-                        padding: 8px;
-                        text-align: left;
+                    td {
+                        border: none;
+                        position: relative;
+                        padding-left: 50%;
                     }
-                    th {
-                        background-color: #f2f2f2;
+                    td:before {
+                        content: attr(data-label);
+                        position: absolute;
+                        left: 10px;
+                        font-weight: bold;
                     }
-                    tr:nth-child(even) {
-                        background-color: #f9f9f9;
-                    }
-                    tr:hover {
-                        background-color: #f1f1f1;
-                    }
-                    pre {
-                        margin: 0;
-                        font-family: monospace;
-                        white-space: pre-wrap;
-                        word-wrap: break-word;
-                    }
-                    @media screen and (max-width: 768px) {
-                        table, thead, tbody, th, td, tr {
-                            display: block;
-                        }
-                        thead tr {
-                            display: none;
-                        }
-                        td {
-                            border: none;
-                            position: relative;
-                            padding-left: 50%;
-                        }
-                        td:before {
-                            content: attr(data-label);
-                            position: absolute;
-                            left: 10px;
-                            font-weight: bold;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>Logged Data</h1>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Timestamp</th>
-                            <th>Request Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows}
-                    </tbody>
-                </table>
-            </body>
-            </html>
-        `)
-  } else {
-    res.send(`
+                }
+                .button-container {
+                    margin-bottom: 20px;
+                }
+                button {
+                    padding: 10px 15px;
+                    font-size: 16px;
+                    color: white;
+                    background-color: #007BFF;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                button:hover {
+                    background-color: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
             <h1>Logged Data</h1>
-            <p>No data available</p>
-        `)
-  }
+            <div class="button-container">
+                <button onclick="clearRequests()">Clear All Requests</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Timestamp</th>
+                        <th>Request Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows || '<tr><td colspan="3">No data available</td></tr>'}
+                </tbody>
+            </table>
+            <script>
+                function clearRequests() {
+                    if (confirm('Are you sure you want to clear all requests?')) {
+                        fetch('/', { method: 'DELETE' })
+                            .then(response => {
+                                if (response.ok) {
+                                    location.reload();
+                                } else {
+                                    alert('Failed to clear requests');
+                                }
+                            });
+                    }
+                }
+            </script>
+        </body>
+        </html>
+    `)
 })
 
 // Start the server
