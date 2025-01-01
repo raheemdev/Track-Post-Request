@@ -1,55 +1,48 @@
-const express = require('express')
-const bodyParser = require('body-parser')
+const express = require('express');
+const bodyParser = require('body-parser');
 
-const app = express()
-const port = process.env.PORT || 3000
+const app = express();
+const port = process.env.PORT || 3000;
 
 // In-memory storage for data with timestamps
-let dataStore = []
+let dataStore = [];
 
 // Middleware to handle JSON and URL-encoded form data
-app.use(bodyParser.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Function to clean up data older than 10 days
 const cleanOldData = () => {
-  const now = Date.now()
-  const tenDaysInMillis = 10 * 24 * 60 * 60 * 1000
-  dataStore = dataStore.filter(item => now - item.timestamp < tenDaysInMillis)
-}
+    const now = Date.now();
+    const tenDaysInMillis = 10 * 24 * 60 * 60 * 1000;
+    dataStore = dataStore.filter(item => now - item.timestamp < tenDaysInMillis);
+};
 
 // Schedule cleanup every hour
-setInterval(cleanOldData, 60 * 60 * 1000) // Every hour
+setInterval(cleanOldData, 60 * 60 * 1000); // Every hour
 
 // Handle form submissions
 app.post('/', (req, res) => {
-  const postData = req.body
-  const timestampedData = { ...postData, timestamp: Date.now() }
-  dataStore.unshift(timestampedData) // Add the new data to the beginning of the array
-  res.status(200).send('done')
-})
+    const postData = req.body;
+    const timestampedData = { ...postData, timestamp: Date.now() };
+    dataStore.unshift(timestampedData); // Add the new data to the beginning of the array
+    res.status(200).send("done");
+});
 
 // Clear all stored data
 app.delete('/', (req, res) => {
-  dataStore = []
-  res.status(200).send('All requests cleared')
-})
+    dataStore = [];
+    res.status(200).send("All requests cleared");
+});
+
+// API endpoint to get the latest data
+app.get('/api/data', (req, res) => {
+    res.json(dataStore);
+});
 
 // Display stored data as a formatted and responsive HTML table
 app.get('/', (req, res) => {
-  const tableRows = dataStore
-    .map(
-      (item, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${new Date(item.timestamp).toLocaleString()}</td>
-            <td><pre>${JSON.stringify(item, null, 2)}</pre></td>
-        </tr>
-    `
-    )
-    .join('')
-
-  res.send(`
+    res.send(`
         <html>
         <head>
             <style>
@@ -124,7 +117,7 @@ app.get('/', (req, res) => {
             <div class="button-container">
                 <button onclick="clearRequests()">Clear All Requests</button>
             </div>
-            <table>
+            <table id="data-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -133,31 +126,56 @@ app.get('/', (req, res) => {
                     </tr>
                 </thead>
                 <tbody>
-                    ${tableRows || '<tr><td colspan="3">No data available</td></tr>'}
+                    <tr><td colspan="3">Loading...</td></tr>
                 </tbody>
             </table>
             <script>
+                async function fetchRequests() {
+                    try {
+                        const response = await fetch('/api/data');
+                        const data = await response.json();
+                        const tableBody = document.querySelector('#data-table tbody');
+                        if (data.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="3">No data available</td></tr>';
+                        } else {
+                            tableBody.innerHTML = data.map((item, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${new Date(item.timestamp).toLocaleString()}</td>
+                                    <td><pre>${JSON.stringify(item, null, 2)}</pre></td>
+                                </tr>
+                            `).join('');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                    }
+                }
+
                 function clearRequests() {
                     if (confirm('Are you sure you want to clear all requests?')) {
                         fetch('/', { method: 'DELETE' })
                             .then(response => {
                                 if (response.ok) {
-                                    location.reload();
+                                    fetchRequests(); // Refresh the table
                                 } else {
                                     alert('Failed to clear requests');
                                 }
                             });
                     }
                 }
+
+                // Fetch requests every second
+                setInterval(fetchRequests, 1000);
+                fetchRequests(); // Initial fetch
             </script>
         </body>
         </html>
-    `)
-})
+    `);
+});
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`)
-})
+    console.log(`Server running at http://localhost:${port}`);
+});
 
-module.exports = app
+module.exports = app;
