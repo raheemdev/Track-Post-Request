@@ -25,11 +25,11 @@ setInterval(cleanOldData, 60 * 60 * 1000) // Every hour
 app.post('/', (req, res) => {
   const postData = req.body
   const timestampedData = { ...postData, timestamp: Date.now() }
-  dataStore.push(timestampedData) // Append the new data with a timestamp
+  dataStore.unshift(timestampedData) // Add the new data to the beginning of the array
   res.status(200).send('done')
 })
 
-// Display stored data as a formatted HTML table
+// Display stored data as a formatted and responsive HTML table
 app.get('/', (req, res) => {
   if (dataStore.length > 0) {
     const tableRows = dataStore
@@ -56,6 +56,7 @@ app.get('/', (req, res) => {
                         width: 100%;
                         border-collapse: collapse;
                         margin-bottom: 20px;
+                        word-wrap: break-word;
                     }
                     th, td {
                         border: 1px solid #ddd;
@@ -70,6 +71,31 @@ app.get('/', (req, res) => {
                     }
                     tr:hover {
                         background-color: #f1f1f1;
+                    }
+                    pre {
+                        margin: 0;
+                        font-family: monospace;
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                    }
+                    @media screen and (max-width: 768px) {
+                        table, thead, tbody, th, td, tr {
+                            display: block;
+                        }
+                        thead tr {
+                            display: none;
+                        }
+                        td {
+                            border: none;
+                            position: relative;
+                            padding-left: 50%;
+                        }
+                        td:before {
+                            content: attr(data-label);
+                            position: absolute;
+                            left: 10px;
+                            font-weight: bold;
+                        }
                     }
                 </style>
             </head>
